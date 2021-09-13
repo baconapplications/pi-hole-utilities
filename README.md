@@ -118,5 +118,7 @@ Takes archive create from archive_pi_hole_docker.sh and copies to the correct di
 * create SSH github.com key (https://docs.github.com/en/github/authenticating-to-github/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)
 * check out this repo
 * sftp tar file from `archive_pi_hole_docker.sh` script
-* run `install_pi_hole_native_from_docker.sh`
+* run `install_pi_hole_native_from_docker.sh -i [tar from previous script]`
+* FIRST time run `cp /etc/pihole-orig/setupVars.conf` to `/etc/pi-hole`
+* FIRST time run set web admin password via `sudo pihole -a -p`
 * bask in glory? pi hole should be running as a copy from your docker instance

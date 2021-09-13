@@ -1,24 +1,27 @@
 #!/bin/bash
 # randybacon
 # 09.12.21
-# helper to set up pi-hole in data directory and use copied files
+# helper to set up pi-hole in data directory and use copied files from docker instance
+#  will create symlink for etc/pihole and point to dest directory below
+#  leaves dnsmasq.d intact
 
 #### adjust these to your configuration (eg where pi-hole is running)
 piholeUser="pihole";
 dataPiHoleDest="/data/pi-hole";
 tmpDir="/data/temp";
-
-#note by default dnsmasq.d is /etc/dnsmasq.d and owned by root
 dnsMasqDest="/etc/dnsmasq.d";
 etcPiHoleSymLink="/etc/pihole";
+
+#### start internal vars
+#note by default dnsmasq.d is /etc/dnsmasq.d and owned by root
 tarFilePath="/pihole";
 tarMasqDir="etc-dnsmasq.d";
 tarEtcPiHoleDir="etc-pihole";
 inputTar="";
 
-#do not edit vars
+#helper to run commands as the correct user
 sudoCmd="sudo -E sh -c";
-piholeUserCmd="sudo -E -u pi";
+piholeUserCmd="sudo -E -u $piholeUser";
 
 #ge incoming args
 optstring=":hi:o:b"

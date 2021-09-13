@@ -2,9 +2,11 @@
 
 I currently use pi-hole on 2 Raspberry Pis: one is a Pi 4 Model B and the other is a PI 1 Model B.  Only the Pi 4 can run docker.  To account for the inability to run docker on the second Pi, I wrote some utility scripts to copy the docker related pi-hole config to my other pi.
 
+So why not the internal tool or something like https://github.com/IarwainBen-adar/pihole-cloudsync?  Well because I wanted something light weight I could control and use to jump between my docker and non-docker hosts...
+
 ## archive_pi_hole_docker.sh
 
-Useful script for anyone, allows you to back up the core directories used by the docker pi-hole install.  By default I create a root `/data` directory to install pi-hole and write temp files.  Adjust tempDir and piHoleRoot for this process if needed.
+Useful script for anyone, allows you to back up the core directories used by the docker pi-hole install.  By default I create a root `/data` directory to install pi-hole and write temp files.  Adjust `tempDir` and `piHoleRoot` script vars for this process if needed.
 
 ### Usage:
 
@@ -20,13 +22,15 @@ Copy of the default docker_run.sh from https://github.com/pi-hole/docker-pi-hole
 
 ## install_pi_hole_native_from_docker.sh
 
-Takes archive create from archive_pi_hole_docker.sh and copies to the correct directories.  I use this script to copy my docker config to a second Raspberry Pi to act as DNS 2.  This script assumes you have create `/data` at root.  It will create an symlink for `/etc/pihole` to data.  I do this to match my docker set up.
+Takes archive created from archive_pi_hole_docker.sh and copies to the correct directories.  I use this script to copy my docker config to a second Raspberry Pi to act as DNS 2.  This script assumes you have created `/data` at root.  It will create an symlink for `/etc/pihole` to data.  I do this to match my docker set up.
 
 ### Usage:
 
-`./install_pi_hole_native_from_docker.sh -i pi-hole-docker.tar.gz` : install from  pi-hole-docker.tar.gz created by archive_pi_hole_docker.sh script
+`./install_pi_hole_native_from_docker.sh -i pi-hole-docker.tar.gz` : install from pi-hole-docker.tar.gz created by archive_pi_hole_docker.sh script
 
-## Current Base Pi Set Up
+## Current Base Pi Set Up Steps
+
+For reference, I use the following process to set up my PIs:
 
 * Create latest SSD using Raspberry Pi Lite (No Desktop)
 * Drop empty `ssh` file on SSD /boot partition (eg `touch ssh`)
@@ -34,13 +38,13 @@ Takes archive create from archive_pi_hole_docker.sh and copies to the correct di
 * ssh to PI (use default username/password)
 * use `sudo raspi-config` to adjust hostname and change default password - see https://www.raspberrypi.org/documentation/computers/configuration.html for more info
 * sudo reboot
-* sudo nano /boot/config.txt and disable wi-fi and bluetooth via adding
+* sudo nano /boot/config.txt and disable wi-fi and bluetooth by adding
     ```
     dtoverlay=pi3-disable-wifi 
     dtoverlay=pi3-disable-bt
     ```
 * sudo reboot
-* add static network via https://www.raspberrypi.org/documentation/computers/configuration.html#static-ip-addresses - edit `/etc/dhcpcd.conf`
+* add static network via https://www.raspberrypi.org/documentation/computers/configuration.html#static-ip-addresses - edit `/etc/dhcpcd.conf`.  Note: this step _might_ depend on your router set up - eg you might be able to use your router to set the IP via MAC address
 * sudo reboot
 * ssh to new IP
 * sudo apt-get update
@@ -48,17 +52,17 @@ Takes archive create from archive_pi_hole_docker.sh and copies to the correct di
 * set up SSH keys for SSH on host
     ```
     ssh-keygen
-    ssh-copy-id username@remote_host
+    ssh-copy-id pi@<PI IP OR DOMAIN HERE>
     ```
 * install git via `sudo apt install git`
 
 ## General Pi Hole Set Up Docker
 
 * download docker install script via `curl -fsSL https://get.docker.com -o get-docker.sh`
-* sh get-docker.sh
-* add `pi` user to docker group
+* sudo sh get-docker.sh
+* add `pi` user to docker group via `sudo usermod -aG docker Pi`
 * sudo reboot
-* confirm `pi` user can run docker hello world
+* confirm `pi` user can run docker hello world via `docker run hello-world`
 * create root /data directory
     ```
     sudo mkdir /data
@@ -69,7 +73,7 @@ Takes archive create from archive_pi_hole_docker.sh and copies to the correct di
 * create SSH github.com key (https://docs.github.com/en/github/authenticating-to-github/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)
 * clone git this repo and copy to `/data/pi-hole`
 * adjust docker_run.sh
-* ./docker_run.sh
+* run `./docker_run.sh`
 * change default pi-hole admin password via:
     ```
     docker exec -it 1d8 /bin/bash
@@ -102,10 +106,14 @@ Takes archive create from archive_pi_hole_docker.sh and copies to the correct di
     www.duck.com,safe.duckduckgo.com
     pixabay.com,safesearch.pixabay.com
     ```
+* restart pi-hole via web admin -> settings -> restart system
+* log into pi-hole web admin and confirm all is well
+* set up local machine to use new pi-hole as DNS and test
+* set up router to use pi-hole as DNS and disable DHCP so pi-hole will act as DNS server
 
 ## General Pi Hole Set Up - Manual
 
-* install pi-hole via `curl -sSL https://install.pi-hole.net | bash` see https://docs.pi-hole.net/main/basic-install/ for more info
+* install pi-hole via `curl -sSL https://install.pi-hole.net | bash` - see https://docs.pi-hole.net/main/basic-install/ for more info
 * create root /data directory
     ```
     sudo mkdir /data
@@ -117,7 +125,7 @@ Takes archive create from archive_pi_hole_docker.sh and copies to the correct di
     ```
 * create SSH github.com key (https://docs.github.com/en/github/authenticating-to-github/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)
 * check out this repo
-* sftp tar file from `archive_pi_hole_docker.sh` script
+* sftp tar file from `archive_pi_hole_docker.sh` script output from docker pi to this instance
 * run `install_pi_hole_native_from_docker.sh -i [tar from previous script]`
 * FIRST time run `cp /etc/pihole-orig/setupVars.conf` to `/etc/pi-hole`
 * FIRST time run set web admin password via `sudo pihole -a -p`

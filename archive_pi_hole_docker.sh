@@ -16,14 +16,13 @@ piHoleRoot="data/pi-hole";
 inputDirs="/$piHoleRoot/etc-dnsmasq.d,/$piHoleRoot/etc-pihole";
 # output tar file
 outputFile="";
+# set by -b flag
+isBak=false;
 
 #### start internal vars
 optstring=":hi:o:b";
 currentdate=`date +"%Y-%m-%d-%H%M%S"`;
 isBakTxt="-bak";
-
-# set by -b flag
-isBak=false;
 
 #ge incoming args
 while getopts ${optstring} flag
@@ -53,7 +52,7 @@ for i in ${inputDirs//,/ }
 do
     tempDataDir="${tempDir}/${i//\/$piHoleRoot\//}";
     echo "copying ${i} to temp dir ${tempDataDir}";
-    if [ -d ${dirToCreate} ]
+    if [ -d ${tempDataDir} ]
     then
         rm -r ${tempDataDir};
     fi
@@ -84,4 +83,5 @@ printf "outputFile: $outputFile\n";
 
 replaceDir=${tempDir:1};
 replaceDir="${replaceDir//\//\\/}";
+#remove temp dir from path and replace with pihole
 tar $exclude-zcvf $outputFile --transform "s,${replaceDir},pihole," $tempInputDirs
